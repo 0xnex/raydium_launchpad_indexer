@@ -1,0 +1,102 @@
+---
+alwaysApply: true
+---
+
+Cursor Rules for Minimal Implementation
+
+## Rule: strict-instruction-following
+
+Follow user instructions exactly without adding unnecessary code or features.
+
+### Instructions:
+
+- ONLY implement what the user explicitly requests
+- DO NOT add extra features, utilities, or helper functions unless specifically asked
+- DO NOT create multiple versions of the same functionality
+- DO NOT add comprehensive documentation unless requested
+- DO NOT create example files unless explicitly asked
+- DO NOT add error handling beyond what's necessary for the core functionality
+- DO NOT add type definitions unless specifically requested
+- DO NOT create test files unless explicitly asked
+- KEEP code minimal and focused on the exact requirement
+- ASK for clarification if the request is ambiguous rather than making assumptions
+
+## Rule: no-unnecessary-code
+
+Avoid creating unnecessary files, functions, or complexity.
+
+### Instructions:
+
+- DO NOT create multiple file versions (simple, typed, enhanced, etc.)
+- DO NOT add comprehensive error handling unless requested
+- DO NOT create utility functions unless specifically needed
+- DO NOT add extensive comments or documentation unless asked
+- DO NOT create example usage files unless requested
+- DO NOT add type safety features unless explicitly asked
+- DO NOT create test files unless specifically requested
+- DO NOT add configuration files unless needed for the core functionality
+- FOCUS on the minimal implementation that satisfies the exact requirement
+
+## Rule: direct-implementation
+
+Implement directly what is asked without over-engineering.
+
+### Instructions:
+
+- Implement the exact functionality requested
+- Use the simplest approach that works
+- DO NOT add bells and whistles
+- DO NOT create multiple approaches to the same problem
+- DO NOT add future-proofing unless requested
+- DO NOT add performance optimizations unless specifically asked
+- DO NOT add security features unless explicitly requested
+- KEEP the implementation straightforward and minima
+  Cursor Rules for Minimal Implementation
+
+## Rule: strict-instruction-following
+
+Follow user instructions exactly without adding unnecessary code or features.
+
+### Instructions:
+
+- ONLY implement what the user explicitly requests
+- DO NOT add extra features, utilities, or helper functions unless specifically asked
+- DO NOT create multiple versions of the same functionality
+- DO NOT add comprehensive documentation unless requested
+- DO NOT create example files unless explicitly asked
+- DO NOT add error handling beyond what's necessary for the core functionality
+- DO NOT add type definitions unless specifically requested
+- DO NOT create test files unless explicitly asked
+- KEEP code minimal and focused on the exact requirement
+- ASK for clarification if the request is ambiguous rather than making assumptions
+
+## Rule: no-unnecessary-code
+
+Avoid creating unnecessary files, functions, or complexity.
+
+### Instructions:
+
+- DO NOT create multiple file versions (simple, typed, enhanced, etc.)
+- DO NOT add comprehensive error handling unless requested
+- DO NOT create utility functions unless specifically needed
+- DO NOT add extensive comments or documentation unless asked
+- DO NOT create example usage files unless requested
+- DO NOT add type safety features unless explicitly asked
+- DO NOT create test files unless specifically requested
+- DO NOT add configuration files unless needed for the core functionality
+- FOCUS on the minimal implementation that satisfies the exact requirement
+
+## Rule: direct-implementation
+
+Implement directly what is asked without over-engineering.
+
+### Instructions:
+
+- Implement the exact functionality requested
+- Use the simplest approach that works
+- DO NOT add bells and whistles
+- DO NOT create multiple approaches to the same problem
+- DO NOT add future-proofing unless requested
+- DO NOT add performance optimizations unless specifically asked
+- DO NOT add security features unless explicitly requested
+- KEEP the implementation straightforward and minima

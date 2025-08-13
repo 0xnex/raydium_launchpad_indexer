@@ -1,12 +1,15 @@
 import { PublicKey } from "@solana/web3.js";
+import type { Commitment } from "@solana/web3.js";
 
 export interface Config {
+  // Solana Configuration
   rpcUrl: string;
   wsUrl: string;
   programId: PublicKey;
 }
 
 export const config: Config = {
+  // Solana Configuration
   rpcUrl: process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com",
   wsUrl:
     process.env.SOLANA_WEBSOCKET_URL || "wss://api.mainnet-beta.solana.com",

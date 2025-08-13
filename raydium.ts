@@ -7,17 +7,10 @@ import type {
 } from "@solana/web3.js";
 import { config } from "./config";
 import { base64, bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
-import { BorshCoder, type Instruction } from "@coral-xyz/anchor";
+import { BN, BorshCoder, type Instruction } from "@coral-xyz/anchor";
 import idl from "./launchpad_idl.json";
 
-export type EventType = "PoolCreated" | "Trade";
-
-export type InstructionData = {
-  name: string;
-  data: { [key: string]: any };
-};
-
-export type EventData = {
+export type RaydiumEventData = {
   instruction: Instruction;
   accounts: PublicKey[];
   signature: string;
@@ -28,66 +21,62 @@ export type EventData = {
 };
 
 export type PoolCreatedEvent = {
-  poolState: string;
-  creator: string;
-  config: string;
-  baseMintParam: {
+  pool_state: PublicKey;
+  creator: PublicKey;
+  config: PublicKey;
+  base_mint_param: {
     decimals: number;
     name: string;
     symbol: string;
     uri: string;
   };
-  curveParam: {
-    constant: {
+  curve_param: {
+    Constant: {
       data: {
-        supply: string;
-        totalBaseSell: string;
-        totalQuoteFundRaising: string;
-        migrateType: number;
+        supply: BN;
+        total_base_sell: BN;
+        total_quote_fund_raising: BN;
+        migrate_type: number;
       };
     };
   };
-  vestingParam: {
-    totalLockedAmount: number;
-    cliffPeriod: number;
-    vestingPeriod: number;
+  vesting_param: {
+    total_locked_amount: BN;
+    cliff_period: BN;
+    vesting_period: BN;
   };
 };
 
 export type TradeEvent = {
-  poolState: string;
-  totalBaseSell: string;
-  virtualBase: string;
-  virtualQuote: string;
-  realBaseBefore: string;
-  realQuoteBefore: string;
-  realBaseAfter: string;
-  realQuoteAfter: string;
-  amountIn: string;
-  amountOut: string;
-  protocolFee: string;
-  platformFee: string;
-  shareFee: string;
-  tradingDirection: { Buy: {} } | { Sell: {} };
-  poolStatus: { Fund: {} } | { Migrate: {} } | { Trade: {} };
+  pool_state: PublicKey;
+  total_base_sell: BN;
+  virtual_base: BN;
+  virtual_quote: BN;
+  real_base_before: BN;
+  real_quote_before: BN;
+  real_base_after: BN;
+  real_quote_after: BN;
+  amount_in: BN;
+  amount_out: BN;
+  protocol_fee: BN;
+  platform_fee: BN;
+  share_fee: BN;
+  trading_direction: { Buy: {} } | { Sell: {} };
+  pool_status: { Fund: {} } | { Migrate: {} } | { Trade: {} };
 };
 
 const coder = new BorshCoder(idl as any);
 
-const TRADE_IX_NAMES = [
-  "buy_exact_out",
-  "sell_exact_in",
-  "buy_exact_in",
-  "sell_exact_out",
-];
-
-// 1. instruction from message.instruction
-// 2. instruction from innerInstructions
-
+/**
+ * Parse a transaction and return the events
+ * @param signature - The signature of the transaction
+ * @param conn - The connection to the Solana cluster
+ * @returns The events found in the transaction
+ */
 export async function parseTransaction(
   signature: string,
   conn: Connection
-): Promise<EventData[]> {
+): Promise<RaydiumEventData[]> {
   console.log(`🚀 start processing: ${signature}`);
   const tx = await conn.getParsedTransaction(signature, {
     maxSupportedTransactionVersion: 0,
@@ -113,7 +102,7 @@ export async function parseTransaction(
     return [];
   }
 
-  const result: EventData[] = [];
+  const result: RaydiumEventData[] = [];
 
   instructions.forEach((ix, index) => {
     if (
@@ -178,10 +167,10 @@ export async function parseTransaction(
 }
 
 function buildEventFromInstruction(
-  data: EventData,
+  data: RaydiumEventData,
   index: number,
   innerInstructions: ParsedInnerInstruction[]
-): EventData {
+): RaydiumEventData {
   innerInstructions.forEach((innerIx, innerIndex) => {
     if (innerIx.index === index) {
       innerIx.instructions.forEach((subIx, subIndex) => {
@@ -202,9 +191,9 @@ function buildEventFromInstruction(
 }
 
 function buildEventFromNestedInstruction(
-  data: EventData,
+  data: RaydiumEventData,
   subInstruction: ParsedInstruction | PartiallyDecodedInstruction
-): EventData {
+): RaydiumEventData {
   if (
     subInstruction.programId.toBase58() === config.programId.toBase58() &&
     "data" in subInstruction
