@@ -109,7 +109,7 @@ export async function processAndImportEvents(events: RaydiumEventData[]) {
     } else if (event.eventType === "TradeEvent") {
       await importTrade(event);
     } else {
-      throw new Error(`Unknown event type: ${event.eventType}`);
+      console.log(`\t🔮 Unknown event type: ${event.eventType}`);
     }
   }
 }

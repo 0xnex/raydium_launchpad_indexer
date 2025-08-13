@@ -112,7 +112,7 @@ export function parseTransaction0(
   tx: ParsedTransactionWithMeta
 ): RaydiumEventData[] {
   if (tx?.meta?.err) {
-    console.log(`\t❌ failed. ${signature}`);
+    console.log(`\t skip failed transaction. ${signature}`);
     return [];
   }
 
