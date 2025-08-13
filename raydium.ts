@@ -2,6 +2,7 @@ import type {
   Connection,
   ParsedInnerInstruction,
   ParsedInstruction,
+  ParsedTransactionWithMeta,
   PartiallyDecodedInstruction,
   PublicKey,
 } from "@solana/web3.js";
@@ -67,24 +68,51 @@ export type TradeEvent = {
 
 const coder = new BorshCoder(idl as any);
 
-/**
- * Parse a transaction and return the events
- * @param signature - The signature of the transaction
- * @param conn - The connection to the Solana cluster
- * @returns The events found in the transaction
- */
-export async function parseTransaction(
-  signature: string,
-  conn: Connection
-): Promise<RaydiumEventData[]> {
-  console.log(`🚀 start processing: ${signature}`);
-  const tx = await conn.getParsedTransaction(signature, {
-    maxSupportedTransactionVersion: 0,
-    commitment: "confirmed",
-  });
+export enum InitializeAccountIndex {
+  Payer = 0,
+  Creator,
+  GlobalConfig,
+  PlatformConfig,
+  Authority,
+  PoolState,
+  BaseMint,
+  QuoteMint,
+  BaseVault,
+  QuoteVault,
+  MetadataAccount,
+  BaseTokenProgram,
+  QuoteTokenProgram,
+  MetadataProgram,
+  SystemProgram,
+  RentProgram,
+  EventAuthority,
+  Program,
+}
 
+export enum TradeAccountIndex {
+  Payer = 0,
+  Authority,
+  GlobalConfig,
+  PlatformConfig,
+  PoolState,
+  UserBaseToken,
+  UserQuoteToken,
+  BaseVault,
+  QuoteVault,
+  BaseTokenMint,
+  QuoteTokenMint,
+  BaseTokenProgram,
+  QuoteTokenProgram,
+  EventAuthority,
+  Program,
+}
+
+export function parseTransaction0(
+  signature: string,
+  tx: ParsedTransactionWithMeta
+): RaydiumEventData[] {
   if (tx?.meta?.err) {
-    console.log(`\t❌failed. ${signature}`);
+    console.log(`\t❌ failed. ${signature}`);
     return [];
   }
 
@@ -93,12 +121,12 @@ export async function parseTransaction(
   const instructions = tx?.transaction.message.instructions!;
 
   if (instructions.length === 0) {
-    console.log(`\t❌no instructions found. ${signature}`);
+    console.log(`\t❌ no instructions found. ${signature}`);
     return [];
   }
 
   if (tx?.meta?.innerInstructions?.length === 0) {
-    console.log(`\t❌no inner instructions found. ${signature}`);
+    console.log(`\t❌ no inner instructions found. ${signature}`);
     return [];
   }
 
@@ -164,6 +192,29 @@ export async function parseTransaction(
     }
   });
   return result;
+}
+
+/**
+ * Parse a transaction and return the events
+ * @param signature - The signature of the transaction
+ * @param conn - The connection to the Solana cluster
+ * @returns The events found in the transaction
+ */
+export async function parseTransaction(
+  signature: string,
+  conn: Connection
+): Promise<RaydiumEventData[]> {
+  console.log(`🚀 start processing: ${signature}`);
+  const tx = await conn.getParsedTransaction(signature, {
+    maxSupportedTransactionVersion: 0,
+    commitment: "confirmed",
+  });
+
+  if (!tx) {
+    throw new Error(`🤚 Transaction ${signature} not found`);
+  }
+
+  return parseTransaction0(signature, tx);
 }
 
 function buildEventFromInstruction(

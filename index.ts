@@ -152,6 +152,17 @@ async function main() {
       debug: {
         type: "string",
       },
+      backfill: {
+        type: "boolean",
+      },
+      before: {
+        type: "string",
+        optional: true,
+      },
+      until: {
+        type: "string",
+        optional: true,
+      },
     },
     strict: true,
     allowPositionals: true,
@@ -160,6 +171,9 @@ async function main() {
   if (values.debug) {
     const result = await parseTransactionBySignature(values.debug);
     console.log(result.events);
+  } else if (values.backfill) {
+    const result = await backfill(values.before, values.until);
+    console.log(result);
   } else {
     realtimeListener();
   }

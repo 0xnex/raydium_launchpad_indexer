@@ -4,7 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "bun run index.ts"
+    "realtime": "bun run index.ts",
+    "backfill": "bun run index.ts --backfill",
+    "debug": "bun run index.ts --debug"
   },
   "devDependencies": {
     "@types/bun": "latest"
