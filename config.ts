@@ -6,6 +6,8 @@ export interface Config {
   rpcUrl: string;
   wsUrl: string;
   programId: PublicKey;
+  platformConfigAddress?: string;
+  databaseUrl: string;
 }
 
 export const config: Config = {
@@ -16,6 +18,7 @@ export const config: Config = {
 
   // Program Configuration
   programId: new PublicKey("LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj"),
+  databaseUrl: process.env.DATABASE_URL || "file:./raydium_platform_indexer.db",
 };
 
 export function validateConfig(config: Config): void {

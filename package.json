@@ -4,20 +4,24 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "realtime": "bun run index.ts",
-    "backfill": "bun run index.ts --backfill",
-    "debug": "bun run index.ts --debug"
+    "start": "bun run index.ts",
+    "debug": "bun run index.ts --debug",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.4"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
+    "@libsql/client": "^0.15.10",
     "@solana/web3.js": "^1.98.4",
     "@types/bn.js": "^5.2.0",
-    "bn.js": "^5.2.2"
+    "bn.js": "^5.2.2",
+    "drizzle-orm": "^0.44.4"
   }
 }

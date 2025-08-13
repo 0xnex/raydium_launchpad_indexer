@@ -62,7 +62,7 @@ export type TradeEvent = {
   protocol_fee: BN;
   platform_fee: BN;
   share_fee: BN;
-  trading_direction: { Buy: {} } | { Sell: {} };
+  trade_direction: { Buy: {} } | { Sell: {} };
   pool_status: { Fund: {} } | { Migrate: {} } | { Trade: {} };
 };
 
@@ -198,11 +198,13 @@ export function parseTransaction0(
  * Parse a transaction and return the events
  * @param signature - The signature of the transaction
  * @param conn - The connection to the Solana cluster
+ * @param platformConfigAddress - The address of the platform config
  * @returns The events found in the transaction
  */
 export async function parseTransaction(
   signature: string,
-  conn: Connection
+  conn: Connection,
+  platformConfigAddress?: string
 ): Promise<RaydiumEventData[]> {
   console.log(`🚀 start processing: ${signature}`);
   const tx = await conn.getParsedTransaction(signature, {
@@ -214,7 +216,18 @@ export async function parseTransaction(
     throw new Error(`🤚 Transaction ${signature} not found`);
   }
 
-  return parseTransaction0(signature, tx);
+  let result = parseTransaction0(signature, tx);
+
+  if (platformConfigAddress) {
+    result = result.filter((event) => {
+      const accounts = event.accounts;
+      return accounts.some((account) =>
+        account.toBase58().includes(platformConfigAddress)
+      );
+    });
+  }
+
+  return result;
 }
 
 function buildEventFromInstruction(
