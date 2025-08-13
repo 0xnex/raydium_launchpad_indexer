@@ -16,7 +16,7 @@ A real-time and historical transaction indexer for the Raydium launchpad platfor
 - **Pagination Support**: Efficiently processes large transaction ranges
 - **Progress Tracking**: Monitor backfilling progress with event listeners
 
-### �� Event Parsing
+### 🚜 Event Parsing
 
 - **Pool Creation Events**: Parse and extract pool creation data including:
 
@@ -34,7 +34,7 @@ A real-time and historical transaction indexer for the Raydium launchpad platfor
   - Trading direction (Buy/Sell)
   - Pool status (Fund/Migrate/Trade)
 
-### ��️ Developer Tools
+### 🧰 Developer Tools
 
 - **Transaction Debugging**: Parse individual transactions by signature
 - **Event Listeners**: Custom event processing with callback functions
