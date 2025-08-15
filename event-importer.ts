@@ -1,18 +1,33 @@
 import { db } from "./database";
-import { mint, trade, type NewMint, type NewTrade } from "./schema";
-import { BN } from "@coral-xyz/anchor";
 import {
+  InitializeAccountIndex,
+  TradeAccountIndex,
   type PoolCreatedEvent,
   type RaydiumEventData,
   type TradeEvent,
-  InitializeAccountIndex,
 } from "./raydium";
-import { eq } from "drizzle-orm";
+import { mint, trade, type NewMint, type NewTrade } from "./schema";
+import { and, eq, lt, lte } from "drizzle-orm";
 
-export async function importMint(mintEvent: RaydiumEventData) {
+export async function importMintEvent(mintEvent: RaydiumEventData) {
   const data = mintEvent.data as unknown as PoolCreatedEvent;
+  const mintAddress =
+    mintEvent.accounts[InitializeAccountIndex.BaseMint]?.toString() ?? "";
+
+  // check if mint already exists
+  const existingMint = await db
+    .select()
+    .from(mint)
+    .where(eq(mint.mint, mintAddress))
+    .limit(1);
+
+  if (existingMint.length > 0) {
+    console.log(`⏭️ Mint ${mintAddress} already exists, skipping...`);
+    return;
+  }
+
   const newMint: NewMint = {
-    mint: mintEvent.accounts[InitializeAccountIndex.BaseMint]?.toString() ?? "",
+    mint: mintAddress,
     creator:
       mintEvent.accounts[InitializeAccountIndex.Creator]?.toString() ?? "",
     poolState:
@@ -31,17 +46,13 @@ export async function importMint(mintEvent: RaydiumEventData) {
     totalLockedAmount: data.vesting_param.total_locked_amount.toString(),
     cliffPeriod: data.vesting_param.cliff_period.toString(),
     cliffPeriodEnd: data.vesting_param.cliff_period.toString(),
-    createdSignature: mintEvent.signature,
-    createdBlockTime: mintEvent.blockTime,
-    virtualBase: new BN(0).toString(),
-    virtualQuote: new BN(0).toString(),
-    realBase: new BN(0).toString(),
-    realQuote: new BN(0).toString(),
-    poolStatus: "Fund",
-    updatedSignature: mintEvent.signature,
-    updatedBlockTime: mintEvent.blockTime,
+    signature: mintEvent.signature,
+    blockTime: mintEvent.blockTime,
+    slot: mintEvent.slot.toString(),
   };
-  await db.insert(mint).values(newMint).onConflictDoNothing();
+
+  await db.insert(mint).values(newMint);
+  console.log(`✅ Created new mint: ${mintAddress}`);
 }
 
 const getPoolStatus = (
@@ -53,7 +64,9 @@ const getPoolStatus = (
   return "Trade";
 };
 
-export async function importTrade(tradeEvent: RaydiumEventData) {
+export async function importTradeEvent(
+  tradeEvent: RaydiumEventData
+): Promise<{ id: number }> {
   const data = tradeEvent.data as unknown as TradeEvent;
   const newTrade: NewTrade = {
     mint:
@@ -80,36 +93,81 @@ export async function importTrade(tradeEvent: RaydiumEventData) {
     poolStatus: getPoolStatus(data.pool_status),
     signature: tradeEvent.signature,
     blockTime: tradeEvent.blockTime,
+    slot: tradeEvent.slot,
   };
-  await db.insert(trade).values(newTrade).onConflictDoNothing();
-  await db
-    .update(mint)
-    .set({
-      virtualBase: data.virtual_base.toString(),
-      virtualQuote: data.virtual_quote.toString(),
-      realBase: data.real_base_after.toString(),
-      realQuote: data.real_quote_after.toString(),
-      poolStatus: getPoolStatus(data.pool_status),
-      updatedSignature: tradeEvent.signature,
-      updatedBlockTime: tradeEvent.blockTime,
-    })
-    .where(
-      eq(
-        mint.mint,
-        tradeEvent.accounts[InitializeAccountIndex.BaseMint]?.toString() ?? ""
-      )
-    );
+  const e = await db.insert(trade).values(newTrade).returning({ id: trade.id });
+  return e[0]!;
 }
 
-export async function processAndImportEvents(events: RaydiumEventData[]) {
+export async function processAndImportEvents(
+  events: RaydiumEventData[],
+  source: "backfill" | "realtime"
+) {
   for (const event of events) {
     console.log(`\t📊 processAndImportEvents: ${event.eventType}...`);
     if (event.eventType === "PoolCreateEvent") {
-      await importMint(event);
+      await importMintEvent(event);
     } else if (event.eventType === "TradeEvent") {
-      await importTrade(event);
+      await processTradeEvent(event, source);
     } else {
       console.log(`\t🔮 Unknown event type: ${event.eventType}`);
     }
+  }
+}
+
+async function processTradeEvent(
+  event: RaydiumEventData,
+  source: "backfill" | "realtime"
+) {
+  const trade = await importTradeEvent(event);
+
+  const poolStateAddress =
+    event.accounts[TradeAccountIndex.PoolState]?.toString() ?? "";
+
+  // Get current mint data from database
+  const currentMint = await db
+    .select()
+    .from(mint)
+    .where(eq(mint.poolState, poolStateAddress))
+    .limit(1);
+
+  if (currentMint.length > 0) {
+    const mintData = currentMint[0]!;
+
+    if (mintData) {
+      if (source === "backfill") {
+        await db
+          .update(mint)
+          .set({ lastTradeSlot: event.slot, lastTradeId: trade.id })
+          .where(
+            and(
+              eq(mint.poolState, poolStateAddress),
+              lt(mint.lastTradeSlot, event.slot)
+            )
+          );
+      } else {
+        await db
+          .update(mint)
+          .set({ lastTradeSlot: event.slot, lastTradeId: trade.id })
+          .where(
+            and(
+              eq(mint.poolState, poolStateAddress),
+              lte(mint.lastTradeSlot, event.slot)
+            )
+          );
+      }
+    }
+  } else {
+    console.log(
+      `\t🔮 Mint not found for pool state ${poolStateAddress}, creating new mint...`
+    );
+    await db.insert(mint).values({
+      mint: event.accounts[TradeAccountIndex.BaseTokenMint]?.toString() ?? "",
+      platformConfig:
+        event.accounts[TradeAccountIndex.PlatformConfig]?.toString() ?? "",
+      poolState: poolStateAddress,
+      lastTradeSlot: event.slot,
+      lastTradeId: trade.id,
+    });
   }
 }

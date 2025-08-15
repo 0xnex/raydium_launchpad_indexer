@@ -4,7 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "bun run index.ts",
+    "realtime": "bun run index.ts --realtime",
+    "backfill": "bun run index.ts --backfill",
+    "gap": "bun run index.ts --gap",
     "debug": "bun run index.ts --debug",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"

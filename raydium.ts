@@ -107,6 +107,12 @@ export enum TradeAccountIndex {
   Program,
 }
 
+export type TxResult = {
+  error: Error | null;
+  signature: string;
+  events: RaydiumEventData[];
+};
+
 export function parseTransaction0(
   signature: string,
   tx: ParsedTransactionWithMeta
